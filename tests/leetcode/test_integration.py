@@ -5,17 +5,10 @@ Run with: pytest -m integration
 Skip with: pytest -m "not integration"
 """
 import pytest
-from interview_prep_mcp.leetcode.client import LeetCodeClient
 from interview_prep_mcp.leetcode.types import Problem
 
 
 pytestmark = pytest.mark.integration
-
-
-@pytest.fixture
-def client():
-    """Create a LeetCodeClient instance."""
-    return LeetCodeClient()
 
 
 class TestLeetCodeIntegration:

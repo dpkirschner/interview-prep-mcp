@@ -1,46 +1,9 @@
 """Tests for leetcode client."""
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from interview_prep_mcp.leetcode.client import LeetCodeClient
 from interview_prep_mcp.leetcode.types import Problem
+from .conftest import mock_async_client
 import httpx
-
-
-@pytest.fixture
-def mock_response_data():
-    """Sample response data from LeetCode API."""
-    return {
-        "data": {
-            "question": {
-                "questionId": "1",
-                "questionFrontendId": "1",
-                "title": "Two Sum",
-                "titleSlug": "two-sum",
-                "difficulty": "Easy",
-                "content": "<p>Given an array of integers...</p>",
-                "topicTags": [
-                    {"name": "Array", "slug": "array"},
-                    {"name": "Hash Table", "slug": "hash-table"}
-                ],
-                "codeSnippets": [
-                    {
-                        "lang": "Python3",
-                        "langSlug": "python3",
-                        "code": "class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:"
-                    }
-                ],
-                "exampleTestcases": "[2,7,11,15]\n9",
-                "sampleTestCase": "[2,7,11,15]\n9",
-                "hints": []
-            }
-        }
-    }
-
-
-@pytest.fixture
-def client():
-    """Create a LeetCodeClient instance."""
-    return LeetCodeClient()
 
 
 class TestLeetCodeClient:
@@ -93,32 +56,22 @@ class TestLeetCodeClient:
             assert problem is None
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_graphql_error(self, client):
+    async def test_fetch_problem_graphql_error(self, client, mock_httpx_response):
         """Test handling GraphQL errors."""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
+        mock_httpx_response.json.return_value = {
             "errors": [
                 {"message": "Problem not found"}
             ]
         }
-        mock_response.raise_for_status = MagicMock()
 
-        with patch("httpx.AsyncClient") as mock_client_class:
-            mock_async_client = AsyncMock()
-            mock_async_client.post = AsyncMock(return_value=mock_response)
-            mock_client_class.return_value.__aenter__.return_value = mock_async_client
-
+        with mock_async_client(mock_httpx_response):
             with pytest.raises(ValueError, match="GraphQL errors"):
                 await client.fetch_problem("two-sum")
 
     @pytest.mark.asyncio
     async def test_fetch_problem_http_error(self, client):
         """Test handling HTTP errors."""
-        with patch("httpx.AsyncClient") as mock_client_class:
-            mock_async_client = AsyncMock()
-            mock_async_client.post = AsyncMock(side_effect=httpx.HTTPError("Connection failed"))
-            mock_client_class.return_value.__aenter__.return_value = mock_async_client
-
+        with mock_async_client(side_effect=httpx.HTTPError("Connection failed")):
             with pytest.raises(httpx.HTTPError):
                 await client.fetch_problem("two-sum")
 
@@ -155,37 +108,23 @@ class TestLeetCodeClient:
     @pytest.mark.asyncio
     async def test_fetch_problem_timeout(self, client):
         """Test handling timeout errors."""
-        with patch("httpx.AsyncClient") as mock_client_class:
-            mock_async_client = AsyncMock()
-            mock_async_client.post = AsyncMock(side_effect=httpx.TimeoutException("Request timed out"))
-            mock_client_class.return_value.__aenter__.return_value = mock_async_client
-
+        with mock_async_client(side_effect=httpx.TimeoutException("Request timed out")):
             with pytest.raises(httpx.TimeoutException):
                 await client.fetch_problem("two-sum")
 
     @pytest.mark.asyncio
     async def test_fetch_problem_network_error(self, client):
         """Test handling network errors."""
-        with patch("httpx.AsyncClient") as mock_client_class:
-            mock_async_client = AsyncMock()
-            mock_async_client.post = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
-            mock_client_class.return_value.__aenter__.return_value = mock_async_client
-
+        with mock_async_client(side_effect=httpx.ConnectError("Connection refused")):
             with pytest.raises(httpx.ConnectError):
                 await client.fetch_problem("two-sum")
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_malformed_json(self, client):
+    async def test_fetch_problem_malformed_json(self, client, mock_httpx_response):
         """Test handling malformed JSON response."""
-        mock_response = MagicMock()
-        mock_response.json.side_effect = ValueError("Invalid JSON")
-        mock_response.raise_for_status = MagicMock()
+        mock_httpx_response.json.side_effect = ValueError("Invalid JSON")
 
-        with patch("httpx.AsyncClient") as mock_client_class:
-            mock_async_client = AsyncMock()
-            mock_async_client.post = AsyncMock(return_value=mock_response)
-            mock_client_class.return_value.__aenter__.return_value = mock_async_client
-
+        with mock_async_client(mock_httpx_response):
             with pytest.raises(ValueError, match="Invalid JSON"):
                 await client.fetch_problem("two-sum")
 
@@ -281,47 +220,35 @@ class TestLeetCodeClient:
             assert call_args[1]["json"]["variables"]["titleSlug"] == "binary-tree-level-order-traversal-ii"
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_multiple_graphql_errors(self, client):
+    async def test_fetch_problem_multiple_graphql_errors(self, client, mock_httpx_response):
         """Test handling multiple GraphQL errors."""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
+        mock_httpx_response.json.return_value = {
             "errors": [
                 {"message": "Error 1"},
                 {"message": "Error 2"},
                 {"message": "Error 3"}
             ]
         }
-        mock_response.raise_for_status = MagicMock()
 
-        with patch("httpx.AsyncClient") as mock_client_class:
-            mock_async_client = AsyncMock()
-            mock_async_client.post = AsyncMock(return_value=mock_response)
-            mock_client_class.return_value.__aenter__.return_value = mock_async_client
-
+        with mock_async_client(mock_httpx_response):
             with pytest.raises(ValueError, match="GraphQL errors: Error 1, Error 2, Error 3"):
                 await client.fetch_problem("two-sum")
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_http_status_error(self, client):
+    async def test_fetch_problem_http_status_error(self, client, mock_httpx_response):
         """Test handling HTTP status errors (4xx, 5xx)."""
-        with patch("httpx.AsyncClient") as mock_client_class:
-            mock_async_client = AsyncMock()
+        mock_httpx_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "500 Server Error", request=MagicMock(), response=MagicMock()
+        )
 
-            mock_response = MagicMock()
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
-                "500 Server Error", request=MagicMock(), response=MagicMock()
-            )
-            mock_async_client.post = AsyncMock(return_value=mock_response)
-            mock_client_class.return_value.__aenter__.return_value = mock_async_client
-
+        with mock_async_client(mock_httpx_response):
             with pytest.raises(httpx.HTTPStatusError):
                 await client.fetch_problem("two-sum")
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_pydantic_validation_error(self, client):
+    async def test_fetch_problem_pydantic_validation_error(self, client, mock_httpx_response):
         """Test handling Pydantic validation errors from malformed data."""
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
+        mock_httpx_response.json.return_value = {
             "data": {
                 "question": {
                     "questionId": "1",
@@ -330,13 +257,8 @@ class TestLeetCodeClient:
                 }
             }
         }
-        mock_response.raise_for_status = MagicMock()
 
-        with patch("httpx.AsyncClient") as mock_client_class:
-            mock_async_client = AsyncMock()
-            mock_async_client.post = AsyncMock(return_value=mock_response)
-            mock_client_class.return_value.__aenter__.return_value = mock_async_client
-
+        with mock_async_client(mock_httpx_response):
             with pytest.raises(Exception):  # Pydantic ValidationError
                 await client.fetch_problem("two-sum")
 
