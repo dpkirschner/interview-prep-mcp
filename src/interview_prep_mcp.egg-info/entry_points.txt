@@ -1,2 +1,0 @@
-[console_scripts]
-interview-prep-mcp = interview_prep_mcp.server:main
