@@ -35,7 +35,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="load_problem",
-            description="Load a LeetCode problem by its title slug or problem ID",
+            description="Load a LeetCode problem by its title slug, problem ID, or search by name",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -46,6 +46,10 @@ async def list_tools() -> list[Tool]:
                     "problem_id": {
                         "type": "integer",
                         "description": "The problem ID number (e.g., 1 for Two Sum)",
+                    },
+                    "problem_name": {
+                        "type": "string",
+                        "description": "Search for problems by name or title (e.g., 'two sum'). Returns multiple matches if found.",
                     }
                 },
             },
@@ -67,12 +71,17 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     elif name == "load_problem":
         title_slug = arguments.get("title_slug")
         problem_id = arguments.get("problem_id")
+        problem_name = arguments.get("problem_name")
 
-        if not title_slug and not problem_id:
-            raise ValueError("Either title_slug or problem_id is required")
+        if not title_slug and not problem_id and not problem_name:
+            raise ValueError("Either title_slug, problem_id, or problem_name is required")
 
         try:
-            result = await load_problem_tool.execute(title_slug=title_slug, problem_id=problem_id)
+            result = await load_problem_tool.execute(
+                title_slug=title_slug,
+                problem_id=problem_id,
+                problem_name=problem_name
+            )
             return [
                 TextContent(
                     type="text",

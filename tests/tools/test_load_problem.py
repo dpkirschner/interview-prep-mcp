@@ -97,7 +97,7 @@ async def test_load_problem_no_parameters():
     """Test that error is raised when no parameters provided."""
     tool = LoadProblemTool()
 
-    with pytest.raises(ValueError, match="Either title_slug or problem_id must be provided"):
+    with pytest.raises(ValueError, match="Either title_slug, problem_id, or problem_name must be provided"):
         await tool.execute()
 
 

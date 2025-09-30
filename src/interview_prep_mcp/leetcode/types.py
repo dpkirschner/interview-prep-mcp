@@ -29,3 +29,19 @@ class Problem(BaseModel):
     exampleTestcases: Optional[str] = None
     sampleTestCase: Optional[str] = None
     hints: list[str] = []
+
+
+class ProblemSummary(BaseModel):
+    """A summary of a LeetCode problem (used for search results)."""
+    questionFrontendId: str
+    title: str
+    titleSlug: str
+    difficulty: Optional[str] = None
+
+
+class CachedProblemInfo(BaseModel):
+    """Cached problem information for fast lookups."""
+    questionFrontendId: str
+    title: str
+    titleSlug: str
+    difficulty: Optional[str] = None
