@@ -11,12 +11,22 @@ class LoadProblemTool:
     def __init__(self):
         self.client = LeetCodeClient()
 
-    async def execute(self, title_slug: str) -> dict:
+    async def initialize(self):
         """
-        Load a LeetCode problem by its title slug.
+        Initialize the tool by preloading the problem ID cache.
+        This should be called when the server starts to hide latency.
+        """
+        # Trigger cache build by calling _get_slug_by_id with a dummy ID
+        # This will populate the cache for all subsequent calls
+        await self.client._get_slug_by_id(1)
+
+    async def execute(self, title_slug: Optional[str] = None, problem_id: Optional[int] = None) -> dict:
+        """
+        Load a LeetCode problem by its title slug or problem ID.
 
         Args:
             title_slug: The URL-friendly slug of the problem (e.g., "two-sum")
+            problem_id: The frontend ID of the problem (e.g., 1)
 
         Returns:
             Dictionary containing formatted problem information
@@ -24,10 +34,18 @@ class LoadProblemTool:
         Raises:
             ValueError: If the problem is not found or fetch fails
         """
-        problem = await self.client.fetch_problem(title_slug)
+        if not title_slug and not problem_id:
+            raise ValueError("Either title_slug or problem_id must be provided")
+
+        if problem_id:
+            problem = await self.client.fetch_problem_by_id(problem_id)
+            identifier = f"ID {problem_id}"
+        else:
+            problem = await self.client.fetch_problem(title_slug)
+            identifier = title_slug
 
         if not problem:
-            raise ValueError(f"Problem not found: {title_slug}")
+            raise ValueError(f"Problem not found: {identifier}")
 
         return self._format_problem(problem)
 

@@ -78,12 +78,59 @@ async def test_load_problem_no_python_code(sample_problem):
     assert result["python_code"] is None
 
 
+@pytest.mark.asyncio
+async def test_load_problem_by_id_success(sample_problem):
+    """Test successfully loading a problem by ID."""
+    tool = LoadProblemTool()
+
+    with patch.object(tool.client, "fetch_problem_by_id", new=AsyncMock(return_value=sample_problem)):
+        result = await tool.execute(problem_id=1)
+
+    assert result["problem_id"] == "1"
+    assert result["title"] == "Two Sum"
+    assert result["title_slug"] == "two-sum"
+    assert result["difficulty"] == "Easy"
+
+
+@pytest.mark.asyncio
+async def test_load_problem_no_parameters():
+    """Test that error is raised when no parameters provided."""
+    tool = LoadProblemTool()
+
+    with pytest.raises(ValueError, match="Either title_slug or problem_id must be provided"):
+        await tool.execute()
+
+
+@pytest.mark.asyncio
+async def test_load_problem_id_not_found():
+    """Test loading a problem ID that doesn't exist."""
+    tool = LoadProblemTool()
+
+    with patch.object(tool.client, "fetch_problem_by_id", new=AsyncMock(return_value=None)):
+        with pytest.raises(ValueError, match="Problem not found: ID 99999"):
+            await tool.execute(problem_id=99999)
+
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_load_problem_real_api():
-    """Integration test with real LeetCode API."""
+    """Integration test with real LeetCode API using title slug."""
     tool = LoadProblemTool()
-    result = await tool.execute("two-sum")
+    result = await tool.execute(title_slug="two-sum")
+
+    assert result["problem_id"] == "1"
+    assert result["title"] == "Two Sum"
+    assert result["difficulty"] == "Easy"
+    assert result["python_code"] is not None
+    assert len(result["topics"]) > 0
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_load_problem_by_id_real_api():
+    """Integration test with real LeetCode API using problem ID."""
+    tool = LoadProblemTool()
+    result = await tool.execute(problem_id=1)
 
     assert result["problem_id"] == "1"
     assert result["title"] == "Two Sum"

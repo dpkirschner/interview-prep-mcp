@@ -35,16 +35,19 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="load_problem",
-            description="Load a LeetCode problem by its title slug (e.g., 'two-sum', 'reverse-linked-list')",
+            description="Load a LeetCode problem by its title slug or problem ID",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "title_slug": {
                         "type": "string",
                         "description": "The URL-friendly slug of the problem (e.g., 'two-sum')",
+                    },
+                    "problem_id": {
+                        "type": "integer",
+                        "description": "The problem ID number (e.g., 1 for Two Sum)",
                     }
                 },
-                "required": ["title_slug"],
             },
         )
     ]
@@ -63,11 +66,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         ]
     elif name == "load_problem":
         title_slug = arguments.get("title_slug")
-        if not title_slug:
-            raise ValueError("title_slug is required")
+        problem_id = arguments.get("problem_id")
+
+        if not title_slug and not problem_id:
+            raise ValueError("Either title_slug or problem_id is required")
 
         try:
-            result = await load_problem_tool.execute(title_slug)
+            result = await load_problem_tool.execute(title_slug=title_slug, problem_id=problem_id)
             return [
                 TextContent(
                     type="text",
@@ -82,6 +87,9 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
 
 async def async_main():
     """Run the MCP server."""
+    # Preload the problem cache on startup to hide latency
+    await load_problem_tool.initialize()
+
     async with stdio_server() as (read_stream, write_stream):
         await app.run(
             read_stream,
