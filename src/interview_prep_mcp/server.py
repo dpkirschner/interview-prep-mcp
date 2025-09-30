@@ -46,7 +46,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         raise ValueError(f"Unknown tool: {name}")
 
 
-async def main():
+async def async_main():
     """Run the MCP server."""
     async with stdio_server() as (read_stream, write_stream):
         await app.run(
@@ -56,5 +56,10 @@ async def main():
         )
 
 
+def main():
+    """Entry point for the MCP server."""
+    asyncio.run(async_main())
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

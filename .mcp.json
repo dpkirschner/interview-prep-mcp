@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "interview-prep-mcp": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/opt/code/interview-prep-mcp",
+        "run",
+        "interview-prep-mcp"
+      ]
+    }
+  }
+}
