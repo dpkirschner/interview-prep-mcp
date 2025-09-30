@@ -1,6 +1,13 @@
 """LeetCode GraphQL API client."""
 import httpx
 from typing import Optional, Dict, List, Union, cast, TypedDict
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+)
+from aiolimiter import AsyncLimiter
 from .types import Problem, ProblemSummary, CachedProblemInfo
 
 
@@ -85,7 +92,15 @@ class LeetCodeClient:
         self.api_url = LEETCODE_API_URL
         self._id_to_slug_cache: Optional[Dict[str, str]] = None
         self._problem_cache: Optional[List[CachedProblemInfo]] = None
+        # Rate limiter: 10 requests per second to be respectful to LeetCode API
+        self._rate_limiter = AsyncLimiter(10, 1)
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=10),
+        retry=retry_if_exception_type((httpx.HTTPStatusError, httpx.TimeoutException, httpx.ConnectError, httpx.NetworkError)),
+        reraise=True,
+    )
     async def fetch_problem(self, title_slug: str) -> Optional[Problem]:
         """
         Fetch a problem by its title slug.
@@ -127,40 +142,41 @@ class LeetCodeClient:
 
         variables = {"titleSlug": title_slug}
 
-        async with httpx.AsyncClient() as client:
-            json_payload: Dict[str, Union[str, Dict[str, str]]] = {
-                "query": query,
-                "variables": variables
-            }
-            response = await client.post(
-                self.url,
-                json=json_payload,
-                headers={
-                    "Content-Type": "application/json",
-                    "Referer": "https://leetcode.com",
-                },
-                timeout=30.0,
-            )
-            response.raise_for_status()
-            data: GraphQLQuestionResponse = cast(GraphQLQuestionResponse, response.json())
+        async with self._rate_limiter:
+            async with httpx.AsyncClient() as client:
+                json_payload: Dict[str, Union[str, Dict[str, str]]] = {
+                    "query": query,
+                    "variables": variables
+                }
+                response = await client.post(
+                    self.url,
+                    json=json_payload,
+                    headers={
+                        "Content-Type": "application/json",
+                        "Referer": "https://leetcode.com",
+                    },
+                    timeout=30.0,
+                )
+                response.raise_for_status()
+                data: GraphQLQuestionResponse = cast(GraphQLQuestionResponse, response.json())
 
-            if data.get("errors"):
-                errors = data["errors"]
-                error_messages: List[str] = [
-                    error.get("message", "") for error in (errors or [])
-                ]
-                raise ValueError(f"GraphQL errors: {', '.join(error_messages)}")
+                if data.get("errors"):
+                    errors = data["errors"]
+                    error_messages: List[str] = [
+                        error.get("message", "") for error in (errors or [])
+                    ]
+                    raise ValueError(f"GraphQL errors: {', '.join(error_messages)}")
 
-            if not data.get("data") or not data["data"] or not data["data"].get("question"):
-                return None
+                if not data.get("data") or not data["data"] or not data["data"].get("question"):
+                    return None
 
-            question_data = data["data"]["question"]
-            if question_data is None:
-                return None
+                question_data = data["data"]["question"]
+                if question_data is None:
+                    return None
 
-            # Use Pydantic's model_validate which handles nested model conversion automatically
-            # This will validate all fields and raise ValidationError for missing required fields
-            return Problem.model_validate(question_data)
+                # Use Pydantic's model_validate which handles nested model conversion automatically
+                # This will validate all fields and raise ValidationError for missing required fields
+                return Problem.model_validate(question_data)
 
     async def _build_id_to_slug_cache(self) -> Dict[str, str]:
         """
@@ -215,17 +231,18 @@ class LeetCodeClient:
                         "query": query,
                         "variables": variables
                     }
-                    response = await client.post(
-                        self.url,
-                        json=json_payload,
-                        headers={
-                            "Content-Type": "application/json",
-                            "Referer": "https://leetcode.com",
-                        },
-                        timeout=30.0,
-                    )
-                    response.raise_for_status()
-                    data: GraphQLListResponse = cast(GraphQLListResponse, response.json())
+                    async with self._rate_limiter:
+                        response = await client.post(
+                            self.url,
+                            json=json_payload,
+                            headers={
+                                "Content-Type": "application/json",
+                                "Referer": "https://leetcode.com",
+                            },
+                            timeout=30.0,
+                        )
+                        response.raise_for_status()
+                        data: GraphQLListResponse = cast(GraphQLListResponse, response.json())
 
                     if data.get("errors"):
                         # Try fallback API
@@ -280,13 +297,14 @@ class LeetCodeClient:
         problem_list: List[CachedProblemInfo] = []
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                self.api_url,
-                headers={"Referer": "https://leetcode.com"},
-                timeout=30.0,
-            )
-            response.raise_for_status()
-            data: RestAPIResponse = cast(RestAPIResponse, response.json())
+            async with self._rate_limiter:
+                response = await client.get(
+                    self.api_url,
+                    headers={"Referer": "https://leetcode.com"},
+                    timeout=30.0,
+                )
+                response.raise_for_status()
+                data: RestAPIResponse = cast(RestAPIResponse, response.json())
 
             if data.get("stat_status_pairs"):
                 stat_status_pairs = data["stat_status_pairs"]
