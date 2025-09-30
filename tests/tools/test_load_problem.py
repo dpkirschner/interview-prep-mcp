@@ -46,8 +46,10 @@ async def test_load_problem_success(sample_problem):
     assert result["difficulty"] == "Easy"
     assert "Given an array of integers" in result["description"]
     assert result["topics"] == ["Array", "Hash Table"]
-    assert result["python_code"] is not None
-    assert "class Solution:" in result["python_code"]
+    # Without language specified, should return all code snippets
+    assert "code_snippets" in result
+    assert "python3" in result["code_snippets"]
+    assert "class Solution:" in result["code_snippets"]["python3"]
     assert result["hints"] == ["A hint for solving the problem"]
     assert result["example_test_cases"] == "[2,7,11,15]\n9"
 
@@ -75,7 +77,10 @@ async def test_load_problem_no_python_code(sample_problem):
     with patch.object(tool.client, "fetch_problem", new=AsyncMock(return_value=sample_problem)):
         result = await tool.execute("two-sum")
 
-    assert result["python_code"] is None
+    # Without language specified, should return all available code snippets
+    assert "code_snippets" in result
+    assert "java" in result["code_snippets"]
+    assert "python3" not in result["code_snippets"]
 
 
 @pytest.mark.asyncio
@@ -121,7 +126,9 @@ async def test_load_problem_real_api():
     assert result["problem_id"] == "1"
     assert result["title"] == "Two Sum"
     assert result["difficulty"] == "Easy"
-    assert result["python_code"] is not None
+    # Without language specified, should return all code snippets
+    assert "code_snippets" in result
+    assert "python3" in result["code_snippets"]
     assert len(result["topics"]) > 0
 
 
@@ -135,5 +142,7 @@ async def test_load_problem_by_id_real_api():
     assert result["problem_id"] == "1"
     assert result["title"] == "Two Sum"
     assert result["difficulty"] == "Easy"
-    assert result["python_code"] is not None
+    # Without language specified, should return all code snippets
+    assert "code_snippets" in result
+    assert "python3" in result["code_snippets"]
     assert len(result["topics"]) > 0

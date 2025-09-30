@@ -35,7 +35,7 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="load_problem",
-            description="Load a LeetCode problem by its title slug, problem ID, or search by name",
+            description="Load a LeetCode problem by its title slug, problem ID, or search by name. Optionally specify a language to get code for that language only.",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -50,6 +50,10 @@ async def list_tools() -> list[Tool]:
                     "problem_name": {
                         "type": "string",
                         "description": "Search for problems by name or title (e.g., 'two sum'). Returns multiple matches if found.",
+                    },
+                    "language": {
+                        "type": "string",
+                        "description": "Programming language for code snippet (e.g., 'python', 'java', 'golang', 'cpp'). If omitted, returns all available code snippets.",
                     }
                 },
             },
@@ -72,6 +76,7 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         title_slug = arguments.get("title_slug")
         problem_id = arguments.get("problem_id")
         problem_name = arguments.get("problem_name")
+        language = arguments.get("language")
 
         if not title_slug and not problem_id and not problem_name:
             raise ValueError("Either title_slug, problem_id, or problem_name is required")
@@ -80,7 +85,8 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             result = await load_problem_tool.execute(
                 title_slug=title_slug,
                 problem_id=problem_id,
-                problem_name=problem_name
+                problem_name=problem_name,
+                language=language
             )
             return [
                 TextContent(
