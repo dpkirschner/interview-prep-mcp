@@ -1,4 +1,4 @@
-.PHONY: test test-unit test-integration test-all test-verbose clean lint format help
+.PHONY: test test-unit test-integration test-all test-verbose clean lint format typecheck help
 
 # Default target
 help:
@@ -10,6 +10,7 @@ help:
 	@echo "  test-verbose     Run unit tests with verbose output"
 	@echo "  lint             Run code linting with ruff"
 	@echo "  format           Format code with black and ruff"
+	@echo "  typecheck        Run mypy type checking"
 	@echo "  clean            Remove Python cache files and test artifacts"
 
 # Run unit tests (default, excludes integration)
@@ -39,6 +40,10 @@ lint:
 format:
 	black src/ tests/
 	ruff check --fix src/ tests/
+
+# Type check with mypy
+typecheck:
+	mypy src/
 
 # Clean up cache and build artifacts
 clean:

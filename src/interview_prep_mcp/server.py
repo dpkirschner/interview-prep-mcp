@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from typing import Any, Dict, Union, List, cast
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
@@ -12,7 +13,7 @@ from .tools.load_problem import LoadProblemTool
 app = Server("interview-prep-mcp")
 
 # Initialize tools
-load_problem_tool = LoadProblemTool()
+load_problem_tool: LoadProblemTool = LoadProblemTool()
 
 
 @app.list_tools()
@@ -62,10 +63,10 @@ async def list_tools() -> list[Tool]:
 
 
 @app.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[TextContent]:
+async def call_tool(name: str, arguments: Dict[str, Any]) -> list[TextContent]:
     """Handle tool calls."""
     if name == "hello":
-        user_name = arguments.get("name", "World")
+        user_name = cast(str, arguments.get("name", "World"))
         return [
             TextContent(
                 type="text",
@@ -73,16 +74,17 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             )
         ]
     elif name == "load_problem":
-        title_slug = arguments.get("title_slug")
-        problem_id = arguments.get("problem_id")
-        problem_name = arguments.get("problem_name")
-        language = arguments.get("language")
+        # Casts are still useful to give types to variables from the untyped 'arguments' dict
+        title_slug = cast(Union[str, None], arguments.get("title_slug"))
+        problem_id = cast(Union[int, None], arguments.get("problem_id"))
+        problem_name = cast(Union[str, None], arguments.get("problem_name"))
+        language = cast(Union[str, None], arguments.get("language"))
 
         if not title_slug and not problem_id and not problem_name:
             raise ValueError("Either title_slug, problem_id, or problem_name is required")
 
         try:
-            result = await load_problem_tool.execute(
+            result: Union[Dict[str, Any], List[Dict[str, Any]]] = await load_problem_tool.execute(
                 title_slug=title_slug,
                 problem_id=problem_id,
                 problem_name=problem_name,
@@ -100,12 +102,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         raise ValueError(f"Unknown tool: {name}")
 
 
-async def async_main():
+async def async_main() -> None:
     """Run the MCP server."""
     # Preload the problem cache on startup to hide latency
     await load_problem_tool.initialize()
 
-    async with stdio_server() as (read_stream, write_stream):
+    async with stdio_server() as streams:
+        read_stream, write_stream = streams
         await app.run(
             read_stream,
             write_stream,
@@ -113,7 +116,7 @@ async def async_main():
         )
 
 
-def main():
+def main() -> None:  # Added return type
     """Entry point for the MCP server."""
     asyncio.run(async_main())
 

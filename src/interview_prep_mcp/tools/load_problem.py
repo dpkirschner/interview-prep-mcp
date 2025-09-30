@@ -1,5 +1,5 @@
 """Tool for loading LeetCode problems."""
-from typing import Optional, Union
+from typing import Optional, Union, Dict, List, Any
 from ..leetcode.client import LeetCodeClient
 from ..leetcode.types import Problem, ProblemSummary, CodeSnippet
 from ..file_generator.naming import suggest_filename
@@ -9,10 +9,10 @@ from bs4 import BeautifulSoup
 class LoadProblemTool:
     """Tool for fetching and formatting LeetCode problems."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.client = LeetCodeClient()
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """
         Initialize the tool by preloading the problem ID cache.
         This should be called when the server starts to hide latency.
@@ -27,7 +27,7 @@ class LoadProblemTool:
         problem_id: Optional[int] = None,
         problem_name: Optional[str] = None,
         language: Optional[str] = None
-    ) -> Union[dict, list[dict]]:
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
         Load a LeetCode problem by its title slug, problem ID, or name.
 
@@ -69,8 +69,9 @@ class LoadProblemTool:
         # Handle fetch by ID or slug
         if problem_id:
             problem = await self.client.fetch_problem_by_id(problem_id)
-            identifier = f"ID {problem_id}"
+            identifier: str = f"ID {problem_id}"
         else:
+            assert title_slug is not None, "title_slug must be provided if problem_id and problem_name are not"
             problem = await self.client.fetch_problem(title_slug)
             identifier = title_slug
 
@@ -126,7 +127,7 @@ class LoadProblemTool:
 
         return None
 
-    def _format_problem(self, problem: Problem, language: Optional[str] = None) -> dict:
+    def _format_problem(self, problem: Problem, language: Optional[str] = None) -> Dict[str, Any]:
         """
         Format problem data for display.
 
@@ -145,7 +146,7 @@ class LoadProblemTool:
         topics = [tag.name for tag in problem.topicTags]
 
         # Base response
-        result = {
+        result: Dict[str, Any] = {
             "problem_id": problem.questionFrontendId,
             "title": problem.title,
             "title_slug": problem.titleSlug,
@@ -181,14 +182,15 @@ class LoadProblemTool:
             )
         else:
             # Return all code snippets
-            result["code_snippets"] = {
+            code_snippets_dict: Dict[str, str] = {
                 snippet.langSlug: snippet.code
                 for snippet in problem.codeSnippets
             }
+            result["code_snippets"] = code_snippets_dict
 
         return result
 
-    def _format_search_results(self, matches: list[ProblemSummary], query: str) -> dict:
+    def _format_search_results(self, matches: list[ProblemSummary], query: str) -> Dict[str, Any]:
         """
         Format search results for display.
 

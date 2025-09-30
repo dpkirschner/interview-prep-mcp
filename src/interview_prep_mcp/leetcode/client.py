@@ -1,7 +1,76 @@
 """LeetCode GraphQL API client."""
 import httpx
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Union, cast, TypedDict
 from .types import Problem, ProblemSummary, CachedProblemInfo
+
+
+class GraphQLError(TypedDict):
+    """Type for GraphQL error objects."""
+    message: str
+
+
+class QuestionData(TypedDict, total=False):
+    """Type for question data from GraphQL."""
+    questionId: str
+    questionFrontendId: str
+    title: str
+    titleSlug: str
+    difficulty: str
+    content: str
+    topicTags: List[Dict[str, str]]
+    codeSnippets: List[Dict[str, str]]
+    exampleTestcases: str
+    sampleTestCase: str
+    hints: List[str]
+
+
+class GraphQLQuestionResponse(TypedDict, total=False):
+    """Type for GraphQL question response."""
+    data: Optional[Dict[str, Optional[QuestionData]]]
+    errors: Optional[List[GraphQLError]]
+
+
+class QuestionListItem(TypedDict):
+    """Type for question list item."""
+    questionFrontendId: str
+    title: str
+    titleSlug: str
+    difficulty: Optional[str]
+
+
+class ProblemsetQuestionList(TypedDict):
+    """Type for problemset question list."""
+    total: int
+    questions: List[QuestionListItem]
+
+
+class GraphQLListResponse(TypedDict, total=False):
+    """Type for GraphQL list response."""
+    data: Optional[Dict[str, ProblemsetQuestionList]]
+    errors: Optional[List[GraphQLError]]
+
+
+class StatData(TypedDict, total=False):
+    """Type for stat data from REST API."""
+    frontend_question_id: int
+    question__title_slug: str
+    question__title: str
+
+
+class DifficultyData(TypedDict, total=False):
+    """Type for difficulty data from REST API."""
+    level: int
+
+
+class StatStatusPair(TypedDict, total=False):
+    """Type for stat status pair from REST API."""
+    stat: StatData
+    difficulty: DifficultyData
+
+
+class RestAPIResponse(TypedDict, total=False):
+    """Type for REST API response."""
+    stat_status_pairs: List[StatStatusPair]
 
 
 LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql/"
@@ -11,7 +80,7 @@ LEETCODE_API_URL = "https://leetcode.com/api/problems/algorithms/"
 class LeetCodeClient:
     """Client for interacting with LeetCode GraphQL API."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.url = LEETCODE_GRAPHQL_URL
         self.api_url = LEETCODE_API_URL
         self._id_to_slug_cache: Optional[Dict[str, str]] = None
@@ -59,9 +128,13 @@ class LeetCodeClient:
         variables = {"titleSlug": title_slug}
 
         async with httpx.AsyncClient() as client:
+            json_payload: Dict[str, Union[str, Dict[str, str]]] = {
+                "query": query,
+                "variables": variables
+            }
             response = await client.post(
                 self.url,
-                json={"query": query, "variables": variables},
+                json=json_payload,
                 headers={
                     "Content-Type": "application/json",
                     "Referer": "https://leetcode.com",
@@ -69,17 +142,25 @@ class LeetCodeClient:
                 timeout=30.0,
             )
             response.raise_for_status()
-            data = response.json()
+            data: GraphQLQuestionResponse = cast(GraphQLQuestionResponse, response.json())
 
-            if "errors" in data:
-                error_messages = [error.get("message", "") for error in data["errors"]]
+            if data.get("errors"):
+                errors = data["errors"]
+                error_messages: List[str] = [
+                    error.get("message", "") for error in (errors or [])
+                ]
                 raise ValueError(f"GraphQL errors: {', '.join(error_messages)}")
 
-            if "data" not in data or not data["data"] or not data["data"].get("question"):
+            if not data.get("data") or not data["data"] or not data["data"].get("question"):
                 return None
 
             question_data = data["data"]["question"]
-            return Problem(**question_data)
+            if question_data is None:
+                return None
+
+            # Use Pydantic's model_validate which handles nested model conversion automatically
+            # This will validate all fields and raise ValidationError for missing required fields
+            return Problem.model_validate(question_data)
 
     async def _build_id_to_slug_cache(self) -> Dict[str, str]:
         """
@@ -122,7 +203,7 @@ class LeetCodeClient:
 
         async with httpx.AsyncClient() as client:
             while True:
-                variables = {
+                variables: Dict[str, Union[str, int, Dict[str, Union[str, int]]]] = {
                     "categorySlug": "",
                     "skip": skip,
                     "limit": limit,
@@ -130,9 +211,13 @@ class LeetCodeClient:
                 }
 
                 try:
+                    json_payload: Dict[str, Union[str, Dict[str, Union[str, int, Dict[str, Union[str, int]]]]]] = {
+                        "query": query,
+                        "variables": variables
+                    }
                     response = await client.post(
                         self.url,
-                        json={"query": query, "variables": variables},
+                        json=json_payload,
                         headers={
                             "Content-Type": "application/json",
                             "Referer": "https://leetcode.com",
@@ -140,26 +225,34 @@ class LeetCodeClient:
                         timeout=30.0,
                     )
                     response.raise_for_status()
-                    data = response.json()
+                    data: GraphQLListResponse = cast(GraphQLListResponse, response.json())
 
-                    if "errors" in data:
+                    if data.get("errors"):
                         # Try fallback API
                         return await self._build_cache_from_api()
 
-                    if "data" not in data or not data["data"]:
+                    if not data.get("data") or not data["data"]:
                         break
 
-                    questions = data["data"]["problemsetQuestionList"]["questions"]
+                    problem_set_data = data["data"]["problemsetQuestionList"]
+                    questions = problem_set_data["questions"]
                     if not questions:
                         break
 
                     # Add to both caches
                     for question in questions:
-                        cache[question["questionFrontendId"]] = question["titleSlug"]
-                        problem_list.append(CachedProblemInfo(**question))
+                        question_id = question["questionFrontendId"]
+                        title_slug = question["titleSlug"]
+                        cache[question_id] = title_slug
+                        problem_list.append(CachedProblemInfo(
+                            questionFrontendId=question["questionFrontendId"],
+                            title=question["title"],
+                            titleSlug=question["titleSlug"],
+                            difficulty=question["difficulty"]
+                        ))
 
                     # Check if we've fetched all problems
-                    total = data["data"]["problemsetQuestionList"]["total"]
+                    total = problem_set_data["total"]
                     skip += limit
                     if skip >= total:
                         break
@@ -193,21 +286,23 @@ class LeetCodeClient:
                 timeout=30.0,
             )
             response.raise_for_status()
-            data = response.json()
+            data: RestAPIResponse = cast(RestAPIResponse, response.json())
 
-            if "stat_status_pairs" in data:
-                for item in data["stat_status_pairs"]:
+            if data.get("stat_status_pairs"):
+                stat_status_pairs = data["stat_status_pairs"]
+                for item in stat_status_pairs:
                     stat = item.get("stat", {})
                     difficulty_info = item.get("difficulty", {})
 
-                    frontend_id = str(stat.get("frontend_question_id", ""))
+                    frontend_id_int = stat.get("frontend_question_id", 0)
+                    frontend_id = str(frontend_id_int)
                     slug = stat.get("question__title_slug", "")
                     title = stat.get("question__title", "")
                     difficulty_level = difficulty_info.get("level", 0)
 
                     # Map difficulty level to string
-                    difficulty_map = {1: "Easy", 2: "Medium", 3: "Hard"}
-                    difficulty = difficulty_map.get(difficulty_level)
+                    difficulty_map: Dict[int, str] = {1: "Easy", 2: "Medium", 3: "Hard"}
+                    difficulty: Optional[str] = difficulty_map.get(difficulty_level)
 
                     if frontend_id and slug:
                         cache[frontend_id] = slug
@@ -280,9 +375,12 @@ class LeetCodeClient:
         query_lower = query.lower()
         matches: List[ProblemSummary] = []
 
+        # Assert that cache is not None after initialization
+        assert self._problem_cache is not None, "Problem cache should be initialized"
+
         for problem in self._problem_cache:
-            title_lower = problem.title.lower()
-            slug_lower = problem.titleSlug.lower()
+            title_lower: str = problem.title.lower()
+            slug_lower: str = problem.titleSlug.lower()
 
             # Match if query is in title or slug
             if query_lower in title_lower or query_lower in slug_lower:
