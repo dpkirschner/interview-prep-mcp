@@ -6,5 +6,6 @@ python-slugify>=8.0.0
 
 [dev]
 pytest>=8.0.0
+pytest-asyncio>=0.23.0
 black>=24.0.0
 ruff>=0.3.0

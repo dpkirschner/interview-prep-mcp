@@ -9,4 +9,6 @@ src/interview_prep_mcp.egg-info/requires.txt
 src/interview_prep_mcp.egg-info/top_level.txt
 src/interview_prep_mcp/file_generator/__init__.py
 src/interview_prep_mcp/leetcode/__init__.py
+src/interview_prep_mcp/leetcode/client.py
+src/interview_prep_mcp/leetcode/types.py
 src/interview_prep_mcp/tools/__init__.py
