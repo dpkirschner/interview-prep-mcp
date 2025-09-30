@@ -21,20 +21,6 @@ async def list_tools() -> list[Tool]:
     """List available tools."""
     return [
         Tool(
-            name="hello",
-            description="A simple hello world tool to verify MCP setup",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Name to greet",
-                    }
-                },
-                "required": ["name"],
-            },
-        ),
-        Tool(
             name="load_problem",
             description="Load a LeetCode problem by its title slug, problem ID, or search by name. Optionally specify a language to get code for that language only.",
             inputSchema={
@@ -65,15 +51,7 @@ async def list_tools() -> list[Tool]:
 @app.call_tool()
 async def call_tool(name: str, arguments: Dict[str, Any]) -> list[TextContent]:
     """Handle tool calls."""
-    if name == "hello":
-        user_name = cast(str, arguments.get("name", "World"))
-        return [
-            TextContent(
-                type="text",
-                text=f"Hello, {user_name}! The MCP server is working correctly.",
-            )
-        ]
-    elif name == "load_problem":
+    if name == "load_problem":
         # Casts are still useful to give types to variables from the untyped 'arguments' dict
         title_slug = cast(Union[str, None], arguments.get("title_slug"))
         problem_id = cast(Union[int, None], arguments.get("problem_id"))
