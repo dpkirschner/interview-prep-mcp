@@ -43,7 +43,7 @@ format:
 
 # Type check with mypy
 typecheck:
-	mypy src/
+	mypy src/ tests/
 
 # Clean up cache and build artifacts
 clean:

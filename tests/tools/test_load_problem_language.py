@@ -6,7 +6,7 @@ from interview_prep_mcp.leetcode.types import Problem, CodeSnippet, TopicTag
 
 
 @pytest.fixture
-def sample_problem_multi_language():
+def sample_problem_multi_language():  # type: ignore[no-untyped-def]
     """Create a sample problem with multiple language code snippets."""
     return Problem(
         questionId="1",
@@ -48,7 +48,7 @@ def sample_problem_multi_language():
 
 
 @pytest.fixture
-def tool():
+def tool():  # type: ignore[no-untyped-def]
     """Create a LoadProblemTool instance."""
     return LoadProblemTool()
 
@@ -57,7 +57,7 @@ class TestLanguageSpecificLoading:
     """Tests for language-specific problem loading."""
 
     @pytest.mark.asyncio
-    async def test_load_problem_with_python_language(self, tool, sample_problem_multi_language):
+    async def test_load_problem_with_python_language(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test loading problem with Python language specified."""
         tool.client.fetch_problem = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -72,7 +72,7 @@ class TestLanguageSpecificLoading:
         assert "code_snippets" not in result
 
     @pytest.mark.asyncio
-    async def test_load_problem_with_java_language(self, tool, sample_problem_multi_language):
+    async def test_load_problem_with_java_language(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test loading problem with Java language specified."""
         tool.client.fetch_problem = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -84,7 +84,7 @@ class TestLanguageSpecificLoading:
         assert result["suggested_filename"] == "1_two_sum.java"
 
     @pytest.mark.asyncio
-    async def test_load_problem_with_golang(self, tool, sample_problem_multi_language):
+    async def test_load_problem_with_golang(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test loading problem with Go language specified."""
         tool.client.fetch_problem = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -96,7 +96,7 @@ class TestLanguageSpecificLoading:
         assert result["suggested_filename"] == "1_two_sum.go"
 
     @pytest.mark.asyncio
-    async def test_load_problem_with_go_alias(self, tool, sample_problem_multi_language):
+    async def test_load_problem_with_go_alias(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that 'go' alias works for 'golang'."""
         tool.client.fetch_problem = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -106,7 +106,7 @@ class TestLanguageSpecificLoading:
         assert result["language"] == "golang"
 
     @pytest.mark.asyncio
-    async def test_load_problem_no_language_returns_all(self, tool, sample_problem_multi_language):
+    async def test_load_problem_no_language_returns_all(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that omitting language returns all code snippets."""
         tool.client.fetch_problem = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -124,7 +124,7 @@ class TestLanguageSpecificLoading:
         assert "suggested_filename" not in result
 
     @pytest.mark.asyncio
-    async def test_load_problem_unsupported_language(self, tool, sample_problem_multi_language):
+    async def test_load_problem_unsupported_language(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test error response when language not available."""
         tool.client.fetch_problem = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -138,7 +138,7 @@ class TestLanguageSpecificLoading:
         assert result["title"] == "Two Sum"
 
     @pytest.mark.asyncio
-    async def test_load_problem_language_case_insensitive(self, tool, sample_problem_multi_language):
+    async def test_load_problem_language_case_insensitive(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that language matching is case-insensitive."""
         tool.client.fetch_problem = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -148,7 +148,7 @@ class TestLanguageSpecificLoading:
         assert result["language"] == "python3"
 
     @pytest.mark.asyncio
-    async def test_load_problem_by_id_with_language(self, tool, sample_problem_multi_language):
+    async def test_load_problem_by_id_with_language(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test loading by problem ID with language."""
         tool.client.fetch_problem_by_id = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -159,7 +159,7 @@ class TestLanguageSpecificLoading:
         assert result["suggested_filename"] == "1_two_sum.java"
 
     @pytest.mark.asyncio
-    async def test_load_problem_cpp_language(self, tool, sample_problem_multi_language):
+    async def test_load_problem_cpp_language(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test loading with C++ language."""
         tool.client.fetch_problem = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -171,7 +171,7 @@ class TestLanguageSpecificLoading:
         assert result["suggested_filename"] == "1_two_sum.cpp"
 
     @pytest.mark.asyncio
-    async def test_load_problem_language_alias_python(self, tool, sample_problem_multi_language):
+    async def test_load_problem_language_alias_python(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that 'py' and 'python' both work."""
         tool.client.fetch_problem = AsyncMock(return_value=sample_problem_multi_language)
 
@@ -185,30 +185,30 @@ class TestLanguageSpecificLoading:
 class TestFindCodeSnippet:
     """Tests for _find_code_snippet helper method."""
 
-    def test_find_by_exact_langslug(self, tool, sample_problem_multi_language):
+    def test_find_by_exact_langslug(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def]
         """Test finding by exact langSlug match."""
         snippet = tool._find_code_snippet(sample_problem_multi_language, "python3")
         assert snippet is not None
         assert snippet.langSlug == "python3"
 
-    def test_find_by_language_name(self, tool, sample_problem_multi_language):
+    def test_find_by_language_name(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def]
         """Test finding by language name."""
         snippet = tool._find_code_snippet(sample_problem_multi_language, "Python3")
         assert snippet is not None
         assert snippet.lang == "Python3"
 
-    def test_find_by_alias(self, tool, sample_problem_multi_language):
+    def test_find_by_alias(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def]
         """Test finding by common alias."""
         snippet = tool._find_code_snippet(sample_problem_multi_language, "go")
         assert snippet is not None
         assert snippet.langSlug == "golang"
 
-    def test_find_returns_none_for_missing(self, tool, sample_problem_multi_language):
+    def test_find_returns_none_for_missing(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def]
         """Test that None is returned for missing language."""
         snippet = tool._find_code_snippet(sample_problem_multi_language, "rust")
         assert snippet is None
 
-    def test_find_case_insensitive(self, tool, sample_problem_multi_language):
+    def test_find_case_insensitive(self, tool, sample_problem_multi_language) -> None:  # type: ignore[no-untyped-def]
         """Test case-insensitive matching."""
         snippet = tool._find_code_snippet(sample_problem_multi_language, "JAVA")
         assert snippet is not None

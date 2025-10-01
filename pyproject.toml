@@ -36,6 +36,9 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+interview_prep_mcp = ["py.typed"]
+
 [tool.black]
 line-length = 100
 
@@ -136,4 +139,10 @@ disallow_any_explicit = false
 module = "interview_prep_mcp.leetcode.client"
 disallow_any_expr = false
 disallow_any_explicit = false
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_any_expr = false
+disallow_any_unimported = false
 disallow_untyped_calls = false

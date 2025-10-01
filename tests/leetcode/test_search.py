@@ -8,7 +8,7 @@ class TestSearchProblems:
     """Tests for search_problems method."""
 
     @pytest.mark.asyncio
-    async def test_search_problems_single_match(self, client):
+    async def test_search_problems_single_match(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test searching for problems with a single match."""
         # Mock the cache
         client._problem_cache = [
@@ -34,7 +34,7 @@ class TestSearchProblems:
         assert results[0].titleSlug == "two-sum"
 
     @pytest.mark.asyncio
-    async def test_search_problems_multiple_matches(self, client):
+    async def test_search_problems_multiple_matches(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test searching for problems with multiple matches."""
         client._problem_cache = [
             CachedProblemInfo(
@@ -69,7 +69,7 @@ class TestSearchProblems:
         assert all("sum" in r.title.lower() or "sum" in r.titleSlug.lower() for r in results)
 
     @pytest.mark.asyncio
-    async def test_search_problems_no_matches(self, client):
+    async def test_search_problems_no_matches(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test searching for problems with no matches."""
         client._problem_cache = [
             CachedProblemInfo(
@@ -85,7 +85,7 @@ class TestSearchProblems:
         assert len(results) == 0
 
     @pytest.mark.asyncio
-    async def test_search_problems_case_insensitive(self, client):
+    async def test_search_problems_case_insensitive(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that search is case insensitive."""
         client._problem_cache = [
             CachedProblemInfo(
@@ -102,7 +102,7 @@ class TestSearchProblems:
         assert results[0].title == "Two Sum"
 
     @pytest.mark.asyncio
-    async def test_search_problems_by_slug(self, client):
+    async def test_search_problems_by_slug(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test searching by slug."""
         client._problem_cache = [
             CachedProblemInfo(
@@ -119,7 +119,7 @@ class TestSearchProblems:
         assert results[0].titleSlug == "two-sum"
 
     @pytest.mark.asyncio
-    async def test_search_problems_respects_limit(self, client):
+    async def test_search_problems_respects_limit(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that search respects the limit parameter."""
         client._problem_cache = [
             CachedProblemInfo(
@@ -136,7 +136,7 @@ class TestSearchProblems:
         assert len(results) == 5
 
     @pytest.mark.asyncio
-    async def test_search_problems_builds_cache_if_needed(self, client):
+    async def test_search_problems_builds_cache_if_needed(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that search builds cache if not already built."""
         assert client._problem_cache is None
 
@@ -168,11 +168,11 @@ class TestSearchProblems:
             results = await client.search_problems("two sum")
 
             assert client._problem_cache is not None
-            assert len(results) == 1
+            assert len(results) == 1  # type: ignore[unreachable]
             assert results[0].title == "Two Sum"
 
     @pytest.mark.asyncio
-    async def test_search_problems_partial_match(self, client):
+    async def test_search_problems_partial_match(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test searching with partial keywords."""
         client._problem_cache = [
             CachedProblemInfo(

@@ -15,7 +15,7 @@ class TestLeetCodeIntegration:
     """Integration tests that make real API calls."""
 
     @pytest.mark.asyncio
-    async def test_fetch_two_sum_problem(self, client):
+    async def test_fetch_two_sum_problem(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test fetching the classic Two Sum problem."""
         problem = await client.fetch_problem("two-sum")
 
@@ -31,7 +31,7 @@ class TestLeetCodeIntegration:
         assert len(problem.content) > 0
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_with_hints(self, client):
+    async def test_fetch_problem_with_hints(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test fetching a problem that typically has hints."""
         problem = await client.fetch_problem("best-time-to-buy-and-sell-stock")
 
@@ -41,7 +41,7 @@ class TestLeetCodeIntegration:
         assert problem.hints is not None
 
     @pytest.mark.asyncio
-    async def test_fetch_hard_problem(self, client):
+    async def test_fetch_hard_problem(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test fetching a hard difficulty problem."""
         problem = await client.fetch_problem("median-of-two-sorted-arrays")
 
@@ -50,7 +50,7 @@ class TestLeetCodeIntegration:
         assert problem.questionFrontendId == "4"
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_with_multiple_languages(self, client):
+    async def test_fetch_problem_with_multiple_languages(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that returned problem has code snippets for multiple languages."""
         problem = await client.fetch_problem("two-sum")
 
@@ -64,14 +64,14 @@ class TestLeetCodeIntegration:
         assert "cpp" in lang_slugs
 
     @pytest.mark.asyncio
-    async def test_fetch_nonexistent_problem(self, client):
+    async def test_fetch_nonexistent_problem(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test fetching a problem that doesn't exist."""
         problem = await client.fetch_problem("this-problem-does-not-exist-12345")
 
         assert problem is None
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_with_special_characters(self, client):
+    async def test_fetch_problem_with_special_characters(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test fetching a problem with special characters in the slug."""
         problem = await client.fetch_problem("binary-tree-level-order-traversal-ii")
 
@@ -80,7 +80,7 @@ class TestLeetCodeIntegration:
         assert "II" in problem.title or "2" in problem.title
 
     @pytest.mark.asyncio
-    async def test_multiple_sequential_requests(self, client):
+    async def test_multiple_sequential_requests(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test making multiple requests in sequence."""
         problems = []
 
@@ -95,7 +95,7 @@ class TestLeetCodeIntegration:
         assert problems[2].questionFrontendId == "3"
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_with_testcases(self, client):
+    async def test_fetch_problem_with_testcases(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that problem returns test cases."""
         problem = await client.fetch_problem("two-sum")
 
@@ -104,7 +104,7 @@ class TestLeetCodeIntegration:
         assert problem.exampleTestcases is not None or problem.sampleTestCase is not None
 
     @pytest.mark.asyncio
-    async def test_python_code_snippet_is_valid(self, client):
+    async def test_python_code_snippet_is_valid(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that Python code snippet is syntactically valid."""
         problem = await client.fetch_problem("two-sum")
 
@@ -121,7 +121,7 @@ class TestLeetCodeIntegration:
         assert "def " in python_snippet.code
 
     @pytest.mark.asyncio
-    async def test_topic_tags_are_valid(self, client):
+    async def test_topic_tags_are_valid(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that topic tags have valid structure."""
         problem = await client.fetch_problem("two-sum")
 
@@ -135,7 +135,7 @@ class TestLeetCodeIntegration:
             assert len(tag.slug) > 0
 
     @pytest.mark.asyncio
-    async def test_content_is_html(self, client):
+    async def test_content_is_html(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that problem content is HTML formatted."""
         problem = await client.fetch_problem("two-sum")
 
@@ -143,7 +143,7 @@ class TestLeetCodeIntegration:
         assert "<p>" in problem.content or "<div>" in problem.content
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_ids_are_consistent(self, client):
+    async def test_fetch_problem_ids_are_consistent(self, client) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that problem IDs are consistent."""
         problem = await client.fetch_problem("two-sum")
 

@@ -6,7 +6,7 @@ from interview_prep_mcp.leetcode.types import Problem, CodeSnippet, TopicTag
 
 
 @pytest.fixture
-def sample_problem():
+def sample_problem():  # type: ignore[no-untyped-def]
     """Create a sample problem for testing."""
     return Problem(
         questionId="1",
@@ -33,13 +33,14 @@ def sample_problem():
 
 
 @pytest.mark.asyncio
-async def test_load_problem_success(sample_problem):
+async def test_load_problem_success(sample_problem) -> None:  # type: ignore[no-untyped-def,misc]
     """Test successfully loading a problem."""
     tool = LoadProblemTool()
 
     with patch.object(tool.client, "fetch_problem", new=AsyncMock(return_value=sample_problem)):
         result = await tool.execute("two-sum")
 
+    assert isinstance(result, dict)
     assert result["problem_id"] == "1"
     assert result["title"] == "Two Sum"
     assert result["title_slug"] == "two-sum"
@@ -55,7 +56,7 @@ async def test_load_problem_success(sample_problem):
 
 
 @pytest.mark.asyncio
-async def test_load_problem_not_found():
+async def test_load_problem_not_found() -> None:
     """Test loading a problem that doesn't exist."""
     tool = LoadProblemTool()
 
@@ -65,7 +66,7 @@ async def test_load_problem_not_found():
 
 
 @pytest.mark.asyncio
-async def test_load_problem_no_python_code(sample_problem):
+async def test_load_problem_no_python_code(sample_problem) -> None:  # type: ignore[no-untyped-def,misc]
     """Test loading a problem without Python code snippet."""
     # Remove Python code snippet
     sample_problem.codeSnippets = [
@@ -78,19 +79,21 @@ async def test_load_problem_no_python_code(sample_problem):
         result = await tool.execute("two-sum")
 
     # Without language specified, should return all available code snippets
+    assert isinstance(result, dict)
     assert "code_snippets" in result
     assert "java" in result["code_snippets"]
     assert "python3" not in result["code_snippets"]
 
 
 @pytest.mark.asyncio
-async def test_load_problem_by_id_success(sample_problem):
+async def test_load_problem_by_id_success(sample_problem) -> None:  # type: ignore[no-untyped-def,misc]
     """Test successfully loading a problem by ID."""
     tool = LoadProblemTool()
 
     with patch.object(tool.client, "fetch_problem_by_id", new=AsyncMock(return_value=sample_problem)):
         result = await tool.execute(problem_id=1)
 
+    assert isinstance(result, dict)
     assert result["problem_id"] == "1"
     assert result["title"] == "Two Sum"
     assert result["title_slug"] == "two-sum"
@@ -98,7 +101,7 @@ async def test_load_problem_by_id_success(sample_problem):
 
 
 @pytest.mark.asyncio
-async def test_load_problem_no_parameters():
+async def test_load_problem_no_parameters() -> None:
     """Test that error is raised when no parameters provided."""
     tool = LoadProblemTool()
 
@@ -107,7 +110,7 @@ async def test_load_problem_no_parameters():
 
 
 @pytest.mark.asyncio
-async def test_load_problem_id_not_found():
+async def test_load_problem_id_not_found() -> None:
     """Test loading a problem ID that doesn't exist."""
     tool = LoadProblemTool()
 
@@ -118,11 +121,12 @@ async def test_load_problem_id_not_found():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_load_problem_real_api():
+async def test_load_problem_real_api() -> None:
     """Integration test with real LeetCode API using title slug."""
     tool = LoadProblemTool()
     result = await tool.execute(title_slug="two-sum")
 
+    assert isinstance(result, dict)
     assert result["problem_id"] == "1"
     assert result["title"] == "Two Sum"
     assert result["difficulty"] == "Easy"
@@ -134,11 +138,12 @@ async def test_load_problem_real_api():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_load_problem_by_id_real_api():
+async def test_load_problem_by_id_real_api() -> None:
     """Integration test with real LeetCode API using problem ID."""
     tool = LoadProblemTool()
     result = await tool.execute(problem_id=1)
 
+    assert isinstance(result, dict)
     assert result["problem_id"] == "1"
     assert result["title"] == "Two Sum"
     assert result["difficulty"] == "Easy"

@@ -11,7 +11,7 @@ class TestRetryLogic:
     """Tests for retry logic using tenacity."""
 
     @pytest.mark.asyncio
-    async def test_retry_decorator_configuration(self):
+    async def test_retry_decorator_configuration(self) -> None:
         """Test that the retry decorator is properly configured on fetch_problem."""
         client = LeetCodeClient()
 
@@ -21,7 +21,7 @@ class TestRetryLogic:
         assert hasattr(client.fetch_problem.retry, 'wait')
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_retries_on_network_error(self):
+    async def test_fetch_problem_retries_on_network_error(self) -> None:
         """Test that fetch_problem retries on network errors."""
         client = LeetCodeClient()
         call_count = 0
@@ -47,7 +47,7 @@ class TestRetryLogic:
         }
         success_response.raise_for_status = MagicMock()
 
-        async def mock_post_with_retries(*args, **kwargs):
+        async def mock_post_with_retries(*args, **kwargs):  # type: ignore[no-untyped-def]
             nonlocal call_count
             call_count += 1
             if call_count < 3:
@@ -72,7 +72,7 @@ class TestRetryLogic:
             assert call_count == 3
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_retries_on_timeout(self):
+    async def test_fetch_problem_retries_on_timeout(self) -> None:
         """Test that fetch_problem retries on timeout errors."""
         client = LeetCodeClient()
         call_count = 0
@@ -97,7 +97,7 @@ class TestRetryLogic:
         }
         success_response.raise_for_status = MagicMock()
 
-        async def mock_post_with_timeout(*args, **kwargs):
+        async def mock_post_with_timeout(*args, **kwargs):  # type: ignore[no-untyped-def]
             nonlocal call_count
             call_count += 1
             if call_count < 2:
@@ -117,12 +117,12 @@ class TestRetryLogic:
             assert call_count == 2  # Failed once, succeeded on 2nd
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_fails_after_max_retries(self):
+    async def test_fetch_problem_fails_after_max_retries(self) -> None:
         """Test that fetch_problem fails after exhausting all retries."""
         client = LeetCodeClient()
         call_count = 0
 
-        async def mock_post_always_fails(*args, **kwargs):
+        async def mock_post_always_fails(*args, **kwargs):  # type: ignore[no-untyped-def]
             nonlocal call_count
             call_count += 1
             raise httpx.ConnectError("Persistent failure", request=MagicMock())
@@ -141,7 +141,7 @@ class TestRetryLogic:
             assert call_count == 3
 
     @pytest.mark.asyncio
-    async def test_fetch_problem_does_not_retry_on_graphql_error(self):
+    async def test_fetch_problem_does_not_retry_on_graphql_error(self) -> None:
         """Test that GraphQL errors (ValueError) are not retried."""
         client = LeetCodeClient()
         call_count = 0
@@ -152,7 +152,7 @@ class TestRetryLogic:
         }
         error_response.raise_for_status = MagicMock()
 
-        async def mock_post_graphql_error(*args, **kwargs):
+        async def mock_post_graphql_error(*args, **kwargs):  # type: ignore[no-untyped-def]
             nonlocal call_count
             call_count += 1
             return error_response
@@ -175,7 +175,7 @@ class TestRateLimiting:
     """Tests for rate limiting using aiolimiter."""
 
     @pytest.mark.asyncio
-    async def test_rate_limiter_exists(self):
+    async def test_rate_limiter_exists(self) -> None:
         """Test that rate limiter is configured."""
         client = LeetCodeClient()
         assert hasattr(client, '_rate_limiter')
@@ -183,7 +183,7 @@ class TestRateLimiting:
         assert client._rate_limiter.time_period == 1  # per second
 
     @pytest.mark.asyncio
-    async def test_rate_limiter_delays_requests(self):
+    async def test_rate_limiter_delays_requests(self) -> None:
         """Test that rate limiter delays requests beyond the limit."""
         client = LeetCodeClient()
 
@@ -207,7 +207,7 @@ class TestRateLimiting:
         }
         success_response.raise_for_status = MagicMock()
 
-        async def mock_post(*args, **kwargs):
+        async def mock_post(*args, **kwargs):  # type: ignore[no-untyped-def]
             return success_response
 
         with patch('interview_prep_mcp.leetcode.client.httpx.AsyncClient') as mock_client_class:
@@ -232,7 +232,7 @@ class TestRateLimiting:
             assert elapsed >= 0.1
 
     @pytest.mark.asyncio
-    async def test_rate_limiter_allows_sequential_requests(self):
+    async def test_rate_limiter_allows_sequential_requests(self) -> None:
         """Test that rate limiter allows sequential requests within limit."""
         client = LeetCodeClient()
 
@@ -256,7 +256,7 @@ class TestRateLimiting:
         }
         success_response.raise_for_status = MagicMock()
 
-        async def mock_post(*args, **kwargs):
+        async def mock_post(*args, **kwargs):  # type: ignore[no-untyped-def]
             return success_response
 
         with patch('interview_prep_mcp.leetcode.client.httpx.AsyncClient') as mock_client_class:

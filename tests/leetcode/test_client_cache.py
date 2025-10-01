@@ -6,7 +6,7 @@ from interview_prep_mcp.leetcode.client import LeetCodeClient
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_cache_performance():
+async def test_cache_performance() -> None:
     """Test that cache improves performance on subsequent lookups."""
     client = LeetCodeClient()
 
@@ -33,7 +33,7 @@ async def test_cache_performance():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_cache_content():
+async def test_cache_content() -> None:
     """Test that cache is built correctly."""
     client = LeetCodeClient()
 

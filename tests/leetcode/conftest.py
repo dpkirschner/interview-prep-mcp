@@ -6,13 +6,13 @@ from interview_prep_mcp.leetcode.client import LeetCodeClient
 
 
 @pytest.fixture
-def client():
+def client():  # type: ignore[no-untyped-def]
     """Create a LeetCodeClient instance."""
     return LeetCodeClient()
 
 
 @pytest.fixture
-def mock_response_data():
+def mock_response_data():  # type: ignore[no-untyped-def]
     """Sample response data from LeetCode API for Two Sum problem."""
     return {
         "data": {
@@ -43,7 +43,7 @@ def mock_response_data():
 
 
 @pytest.fixture
-def mock_httpx_response():
+def mock_httpx_response():  # type: ignore[no-untyped-def]
     """Create a mock httpx response with common setup."""
     mock_response = MagicMock()
     mock_response.raise_for_status = MagicMock()
@@ -51,7 +51,7 @@ def mock_httpx_response():
 
 
 @contextmanager
-def mock_async_client(mock_response=None, side_effect=None):
+def mock_async_client(mock_response=None, side_effect=None):  # type: ignore[no-untyped-def,misc]
     """
     Context manager to mock httpx.AsyncClient for testing.
 

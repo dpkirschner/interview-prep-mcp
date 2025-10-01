@@ -6,13 +6,13 @@ from interview_prep_mcp.leetcode.types import Problem, ProblemSummary, TopicTag,
 
 
 @pytest.fixture
-def tool():
+def tool():  # type: ignore[no-untyped-def]
     """Create a LoadProblemTool instance."""
     return LoadProblemTool()
 
 
 @pytest.fixture
-def sample_problem():
+def sample_problem():  # type: ignore[no-untyped-def]
     """Create a sample Problem object."""
     return Problem(
         questionId="1",
@@ -41,7 +41,7 @@ class TestLoadProblemSearch:
     """Tests for load_problem with search functionality."""
 
     @pytest.mark.asyncio
-    async def test_execute_with_problem_name_single_match(self, tool, sample_problem):
+    async def test_execute_with_problem_name_single_match(self, tool, sample_problem) -> None:  # type: ignore[no-untyped-def,misc]
         """Test loading problem by name with single match."""
         # Mock search returning single match
         tool.client.search_problems = AsyncMock(return_value=[
@@ -63,7 +63,7 @@ class TestLoadProblemSearch:
         tool.client.fetch_problem.assert_called_once_with("two-sum")
 
     @pytest.mark.asyncio
-    async def test_execute_with_problem_name_multiple_matches(self, tool):
+    async def test_execute_with_problem_name_multiple_matches(self, tool) -> None:  # type: ignore[no-untyped-def,misc]
         """Test loading problem by name with multiple matches."""
         # Mock search returning multiple matches
         matches = [
@@ -99,7 +99,7 @@ class TestLoadProblemSearch:
         assert result["matches"][1]["title"] == "Add Two Numbers"
 
     @pytest.mark.asyncio
-    async def test_execute_with_problem_name_no_matches(self, tool):
+    async def test_execute_with_problem_name_no_matches(self, tool) -> None:  # type: ignore[no-untyped-def,misc]
         """Test loading problem by name with no matches."""
         tool.client.search_problems = AsyncMock(return_value=[])
 
@@ -107,13 +107,13 @@ class TestLoadProblemSearch:
             await tool.execute(problem_name="nonexistent problem")
 
     @pytest.mark.asyncio
-    async def test_execute_without_parameters_raises_error(self, tool):
+    async def test_execute_without_parameters_raises_error(self, tool) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that calling execute without parameters raises error."""
         with pytest.raises(ValueError, match="Either title_slug, problem_id, or problem_name must be provided"):
             await tool.execute()
 
     @pytest.mark.asyncio
-    async def test_format_search_results(self, tool):
+    async def test_format_search_results(self, tool) -> None:  # type: ignore[no-untyped-def,misc]
         """Test formatting search results."""
         matches = [
             ProblemSummary(
@@ -142,7 +142,7 @@ class TestLoadProblemSearch:
         assert "message" in result
 
     @pytest.mark.asyncio
-    async def test_execute_prefers_problem_name_over_other_params(self, tool, sample_problem):
+    async def test_execute_prefers_problem_name_over_other_params(self, tool, sample_problem) -> None:  # type: ignore[no-untyped-def,misc]
         """Test that problem_name takes precedence when multiple params provided."""
         matches = [
             ProblemSummary(
